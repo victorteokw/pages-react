@@ -3,90 +3,54 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.pagenize = pagenize;
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+exports.renderRootPage = renderRootPage;
 
 var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
-var _pagesCore = require('pages-core');
+var _omit = require('lodash/omit');
 
-var _includes = require('lodash/includes');
+var _omit2 = _interopRequireDefault(_omit);
 
-var _includes2 = _interopRequireDefault(_includes);
+var _map = require('lodash/map');
 
-var _cloneDeep = require('lodash/cloneDeep');
+var _map2 = _interopRequireDefault(_map);
 
-var _cloneDeep2 = _interopRequireDefault(_cloneDeep);
+var _concat = require('lodash/concat');
 
-var _drop = require('lodash/drop');
-
-var _drop2 = _interopRequireDefault(_drop);
-
-var _isEqual = require('lodash/isEqual');
-
-var _isEqual2 = _interopRequireDefault(_isEqual);
-
-var _keys = require('lodash/keys');
-
-var _keys2 = _interopRequireDefault(_keys);
-
-var _intersection = require('lodash/intersection');
-
-var _intersection2 = _interopRequireDefault(_intersection);
-
-var _assign = require('lodash/assign');
-
-var _assign2 = _interopRequireDefault(_assign);
+var _concat2 = _interopRequireDefault(_concat);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function hasAnyFrom(a, b) {
-  return !!(0, _intersection2.default)(a, b).length;
-}
+function renderRootPage(d, pages) {
+  var injectPath = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+  var additionalProps = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+  var path = arguments[4];
+  var key = d.key,
+      page = d.page,
+      props = d.props;
 
-function pagenize(target) {
-
-  // Modifying propTypes
-  target.propTypes || (target.propTypes = {});
-
-  if (hasAnyFrom((0, _keys2.default)(target.propTypes), ['pages', 'path', 'childPages', '_root'])) {
-    console.warn("pages-react: Do not include 'pages', 'path', 'childPages', '_root' in your react component. \n" + target.toString());
+  var Page = pages[page];
+  var children = props.children;
+  var pureProps = (0, _omit2.default)(props, 'children');
+  if (!path) {
+    path = [d.key];
   }
-
-  target.propTypes['pages'] = _react2.default.PropTypes.objectOf(_react2.default.PropTypes.any);
-
-  target.propTypes['path'] = _react2.default.PropTypes.arrayOf(_react2.default.PropTypes.string.isRequired);
-
-  target.propTypes['childPages'] = _react2.default.PropTypes.arrayOf(_react2.default.PropTypes.shape({
-    key: _react2.default.PropTypes.string.isRequired,
-    page: _react2.default.PropTypes.string.isRequired,
-    props: _react2.default.PropTypes.object
-  }));
-
-  target.propTypes['_root'] = _react2.default.PropTypes.bool.isRequired;
-
-  // Dispatch is for pages-react-redux
-
-  // Modifying defaultProps
-  target.defaultProps || (target.defaultProps = {});
-
-  target.defaultProps = (0, _assign2.default)(target.defaultProps, {
-    pages: {},
-    path: [],
-    childPages: [],
-    _root: false
-  });
-
-  // Adding pure render method
-  // if (!target.prototype.pureRender) {
-  //   target.prototype.pureRender = function() {return true};
-  // }
-
-  // Modifying shouldComponentUpdate
-  // target.prototype.shouldComponentUpdate = function(nextProps, nextState) {
-  //   return !(this.pureRender() && isEqual(this.props, nextProps) && isEqual(this.state, nextState));
-  // };
-
-  // target.prototype.__originalRender = target.prototype.render;
+  if (injectPath) {
+    if (pureProps.path) {
+      throw 'path should be reserved for pages.';
+    }
+    pureProps.path = path;
+  }
+  return _react2.default.createElement(
+    Page,
+    _extends({ key: key }, pureProps, additionalProps),
+    (0, _map2.default)(children, function (c) {
+      return renderRootPage(c, pages, injectPath, additionalProps, (0, _concat2.default)(path, c.key));
+    })
+  );
 }
